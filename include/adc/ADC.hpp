@@ -27,7 +27,7 @@ public:
   using Unit = std::uint8_t;
   using Handle = adc_continuous_handle_t;
   using ChannelNumber = Channel::Number;
-  using ChannelConfigurations = std::vector<adc_digi_pattern_config_t>;
+  using Configurations = std::vector<adc_digi_pattern_config_t>;
   using CalibrationHandle = adc_cali_handle_t;
 
 public:
@@ -48,7 +48,7 @@ private:
   ADC::CalibrationHandle m_calibrationHandle = nullptr;
 
 private:
-  ChannelConfigurations m_configurations = {};
+  ADC::Configurations m_configurations = {};
 };
 
 }// namespace adc

@@ -62,9 +62,9 @@ Channel::Value Channel::getRawValue() const {
     return 0;
   }
 
-  auto const rawAverageData = sumOfRawDataPerFrame / valueCount;
+  auto const rawValue = sumOfRawDataPerFrame / valueCount;
 
-  return rawAverageData;
+  return rawValue;
 }
 
 Channel::Voltage Channel::getVoltage() const {
