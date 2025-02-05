@@ -20,7 +20,7 @@ namespace adc {
 
 auto const TAG = "ADC Channel";
 
-Channel::Channel(Channel::Number const channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle) : m_number(channel),
+Channel::Channel(Channel::Number const channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle) : m_channel(channel),
                                                                                                                           m_handle(handle),
                                                                                                                           m_calibrationHandle(calibrationHandle) {
 }
@@ -42,7 +42,7 @@ Channel::Value Channel::getRawValue() const {
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     std::uint32_t const channelNumber = outputData->type1.channel;
-    if (channelNumber == m_number) {
+    if (channelNumber == m_channel) {
       std::uint32_t const data = outputData->type1.data;
       valueCount += 1;
       sumOfRawDataPerFrame += data;
@@ -50,7 +50,7 @@ Channel::Value Channel::getRawValue() const {
 
 #else
     std::uint32_t const channelNumber = outputData->type2.channel;
-    if (channelNumber == m_number) {
+    if (channelNumber == m_channel) {
       std::uint32_t const data = outputData->type2.data;
       valueCount += 1;
       sumOfRawDataPerFrame += data;

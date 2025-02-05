@@ -38,7 +38,7 @@ public:
   [[nodiscard]] Channel::Voltage getVoltage() const;
 
 private:
-  Channel::Number const m_number;
+  Channel::Number const m_channel;
 
 private:
   Channel::Handle &m_handle;
