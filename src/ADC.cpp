@@ -17,6 +17,8 @@
 #include <esp_adc/adc_cali_scheme.h>
 #include <esp_log.h>
 
+#include "sdkconfig.h"
+
 namespace adc {
 
 auto const TAG = "ADC";
@@ -84,4 +86,4 @@ void ADC::reconfigure() {
   ESP_ERROR_CHECK(adc_continuous_start(m_handle));
 }
 
-}// namespace adc
+} // namespace adc

@@ -14,19 +14,24 @@
 
 #include "adc/Channel.hpp"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <esp_err.h>
 #include <esp_log.h>
+
+#include "sdkconfig.h"
 
 namespace adc {
 
 auto const TAG = "ADC Channel";
 
-Channel::Channel(Channel::Number const channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle) : m_channel(channel),
-                                                                                                                          m_handle(handle),
-                                                                                                                          m_calibrationHandle(calibrationHandle) {
-}
+Channel::Channel(Channel::Number const channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle)
+    : m_channel(channel), m_handle(handle), m_calibrationHandle(calibrationHandle) {}
 
-Channel::Value Channel::getRawValue() const {
-  std::uint8_t frame[ADC_FRAME_SIZE] = {};
+auto Channel::getRawValue() const -> Channel::Value {
+  std::array<std::uint8_t, ADC_FRAME_SIZE> frame = {};
+
   std::uint32_t numberOfValuesInFrame = 0;
 
   esp_err_t returnCode = adc_continuous_read(m_handle, frame, ADC_FRAME_SIZE, &numberOfValuesInFrame, 0);
@@ -77,4 +82,4 @@ Channel::Voltage Channel::getVoltage() const {
   return voltage;
 }
 
-}// namespace adc
+} // namespace adc

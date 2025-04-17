@@ -45,7 +45,7 @@ private:
   Channel::CalibrationHandle &m_calibrationHandle;
 };
 
-}// namespace adc
+} // namespace adc
 
 #include <memory>
 

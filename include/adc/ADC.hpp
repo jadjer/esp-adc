@@ -51,4 +51,4 @@ private:
   ADC::Configurations m_configurations = {};
 };
 
-}// namespace adc
+} // namespace adc
