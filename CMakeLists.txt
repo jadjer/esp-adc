@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.30.5)
 
 set(SOURCES
-        src/ADC.cpp
+        src/Unit.cpp
         src/Channel.cpp
 )
 

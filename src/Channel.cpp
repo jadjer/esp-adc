@@ -15,7 +15,6 @@
 #include "adc/Channel.hpp"
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
 #include <esp_err.h>
 #include <esp_log.h>
@@ -24,38 +23,49 @@
 
 namespace adc {
 
+namespace {
+
 auto const TAG = "ADC Channel";
 
-Channel::Channel(Channel::Number const channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle)
-    : m_channel(channel), m_handle(handle), m_calibrationHandle(calibrationHandle) {}
+auto const ADC_FRAME_SIZE = 256 * SOC_ADC_DIGI_RESULT_BYTES;
+
+using Byte = std::uint8_t;
+using Error = esp_err_t;
+using Frame = std::array<Byte, ADC_FRAME_SIZE>;
+
+} // namespace
+
+Channel::Channel(Channel::ChannelNumber const channelNumber, Channel::DriverHandle &driverHandle, Channel::CalibrationHandle &calibrationHandle)
+    : channelNumber(channelNumber), driverHandle(driverHandle), calibrationHandle(calibrationHandle) {}
 
 auto Channel::getRawValue() const -> Channel::Value {
-  std::array<std::uint8_t, ADC_FRAME_SIZE> frame = {};
+  Frame frame{};
 
   std::uint32_t numberOfValuesInFrame = 0;
 
-  esp_err_t returnCode = adc_continuous_read(m_handle, frame, ADC_FRAME_SIZE, &numberOfValuesInFrame, 0);
+  Error const returnCode = adc_continuous_read(driverHandle, frame.data(), ADC_FRAME_SIZE, &numberOfValuesInFrame, 0);
   if (returnCode != ESP_OK) {
+    ESP_LOGE(TAG, "Read value error: %s", esp_err_to_name(returnCode));
     return 0;
   }
 
-  std::size_t valueCount = 0;
+  std::uint32_t valueCount = 0;
   std::uint32_t sumOfRawDataPerFrame = 0;
 
-  for (auto i = 0; i < numberOfValuesInFrame; i += SOC_ADC_DIGI_RESULT_BYTES) {
-    auto const outputData = reinterpret_cast<adc_digi_output_data_t *>(&frame[i]);
+  for (std::uint32_t i = 0; i < numberOfValuesInFrame; i += SOC_ADC_DIGI_RESULT_BYTES) {
+    auto *const outputData = reinterpret_cast<adc_digi_output_data_t *>(&frame.at(i));
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-    std::uint32_t const channelNumber = outputData->type1.channel;
-    if (channelNumber == m_channel) {
+    std::uint32_t const currentChannelNumber = outputData->type1.channel;
+    if (currentChannelNumber == channelNumber) {
       std::uint32_t const data = outputData->type1.data;
       valueCount += 1;
       sumOfRawDataPerFrame += data;
     }
 
 #else
-    std::uint32_t const channelNumber = outputData->type2.channel;
-    if (channelNumber == m_channel) {
+    std::uint32_t const currentChannelNumber = outputData->type2.channel;
+    if (currentChannelNumber == channelNumber) {
       std::uint32_t const data = outputData->type2.data;
       valueCount += 1;
       sumOfRawDataPerFrame += data;
@@ -67,19 +77,24 @@ auto Channel::getRawValue() const -> Channel::Value {
     return 0;
   }
 
-  auto const rawValue = sumOfRawDataPerFrame / valueCount;
+  Channel::Value const rawValue = sumOfRawDataPerFrame / valueCount;
 
   return rawValue;
 }
 
-Channel::Voltage Channel::getVoltage() const {
+auto Channel::getVoltage() const -> Channel::Voltage {
   auto const rawValue = getRawValue();
 
   int voltage = 0;
 
-  ESP_ERROR_CHECK(adc_cali_raw_to_voltage(m_calibrationHandle, rawValue, &voltage));
+  Error const returnCode = adc_cali_raw_to_voltage(calibrationHandle, rawValue, &voltage);
+  if (returnCode != ESP_OK) {
+    ESP_LOGE(TAG, "Convert raw value to voltage error: %s", esp_err_to_name(returnCode));
+  }
 
   return voltage;
 }
+
+auto Channel::getFrameSize() const -> Channel::FrameSize { return ADC_FRAME_SIZE; }
 
 } // namespace adc

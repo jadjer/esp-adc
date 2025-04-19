@@ -20,33 +20,32 @@
 
 namespace adc {
 
-auto const ADC_FRAME_SIZE = 256 * SOC_ADC_DIGI_RESULT_BYTES;
-
 class Channel {
 public:
+  friend class Unit;
+
+public:
   using Value = std::uint16_t;
-  using Handle = adc_continuous_handle_t;
-  using Number = std::uint8_t;
   using Voltage = std::uint16_t;
+  using FrameSize = std::uint32_t;
+  using DriverHandle = adc_continuous_handle_t;
+  using ChannelNumber = std::uint8_t;
   using CalibrationHandle = adc_cali_handle_t;
 
 public:
-  Channel(Channel::Number channel, Channel::Handle &handle, Channel::CalibrationHandle &calibrationHandle);
-
-public:
-  [[nodiscard]] Channel::Value getRawValue() const;
-  [[nodiscard]] Channel::Voltage getVoltage() const;
+  [[nodiscard]] [[maybe_unused]] auto getRawValue() const -> Value;
+  [[nodiscard]] [[maybe_unused]] auto getVoltage() const -> Voltage;
+  [[nodiscard]] [[maybe_unused]] auto getFrameSize() const -> FrameSize;
 
 private:
-  Channel::Number const m_channel;
+  Channel(ChannelNumber channelNumber, DriverHandle &driverHandle, CalibrationHandle &calibrationHandle);
 
 private:
-  Channel::Handle &m_handle;
-  Channel::CalibrationHandle &m_calibrationHandle;
+  ChannelNumber const channelNumber;
+
+private:
+  DriverHandle &driverHandle;
+  CalibrationHandle &calibrationHandle;
 };
 
 } // namespace adc
-
-#include <memory>
-
-using ChannelPtr = std::unique_ptr<adc::Channel>;

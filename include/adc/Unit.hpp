@@ -18,37 +18,40 @@
 #include <cstdint>
 #include <esp_adc/adc_cali.h>
 #include <esp_adc/adc_continuous.h>
+#include <expected>
+#include <memory>
 #include <vector>
 
 namespace adc {
 
-class ADC {
+class Unit {
 public:
-  using Unit = std::uint8_t;
-  using Handle = adc_continuous_handle_t;
-  using ChannelNumber = Channel::Number;
-  using Configurations = std::vector<adc_digi_pattern_config_t>;
+  using UnitNumber = uint8_t;
+  using DriverHandle = adc_continuous_handle_t;
   using CalibrationHandle = adc_cali_handle_t;
+  using ChannelConfiguration = adc_digi_pattern_config_t;
+
+private:
+  using ChannelConfigurations = std::vector<ChannelConfiguration>;
 
 public:
-  explicit ADC(ADC::Unit unit);
-  ~ADC();
+  Unit(UnitNumber unitNumber);
 
 public:
-  ChannelPtr createChannel(ADC::ChannelNumber channel);
+  [[nodiscard]] [[maybe_unused]] auto createChannel(Channel::ChannelNumber channelNumber) -> Channel;
 
 private:
-  void reconfigure();
+  auto reconfigure() -> bool;
 
 private:
-  ADC::Unit const m_unit;
+  UnitNumber const unitNumber;
 
 private:
-  ADC::Handle m_handle = nullptr;
-  ADC::CalibrationHandle m_calibrationHandle = nullptr;
+  DriverHandle driverHandle = nullptr;
+  CalibrationHandle calibrationHandle = nullptr;
 
 private:
-  ADC::Configurations m_configurations = {};
+  ChannelConfigurations channelConfigurations = {};
 };
 
 } // namespace adc
