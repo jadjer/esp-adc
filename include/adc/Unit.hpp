@@ -17,6 +17,7 @@
 #include <adc/Channel.hpp>
 #include <cstdint>
 #include <esp_adc/adc_cali.h>
+#include <esp_adc/adc_cali_scheme.h>
 #include <esp_adc/adc_continuous.h>
 #include <expected>
 #include <memory>
@@ -26,32 +27,44 @@ namespace adc {
 
 class Unit {
 public:
-  using UnitNumber = uint8_t;
-  using DriverHandle = adc_continuous_handle_t;
-  using CalibrationHandle = adc_cali_handle_t;
-  using ChannelConfiguration = adc_digi_pattern_config_t;
-
-private:
-  using ChannelConfigurations = std::vector<ChannelConfiguration>;
-
-public:
-  Unit(UnitNumber unitNumber);
+  enum class Error : std::uint8_t {
+    UNIT_CREATE_ERROR,
+    CALIBRATION_INIT_ERROR,
+    DEVICE_MAX_SIZE,
+    DEVICE_CONFIGURATION_ERROR,
+    UNIT_START_FAILED,
+  };
 
 public:
-  [[nodiscard]] [[maybe_unused]] auto createChannel(Channel::ChannelNumber channelNumber) -> Channel;
+  using Number = uint8_t;
+  using Pointer = std::unique_ptr<Unit>;
 
 private:
-  auto reconfigure() -> bool;
+  using Configuration = adc_digi_pattern_config_t;
+  using Configurations = std::vector<Configuration>;
+
+public:
+  static auto create(Number unitNumber) -> std::expected<Pointer, Error>;
 
 private:
-  UnitNumber const unitNumber;
+  Unit(Number unitNumber, Channel::ContinuousHandle continuousHandle, Channel::CalibrationHandle calibrationHandle) noexcept;
+
+public:
+  ~Unit() noexcept;
+
+public:
+  [[nodiscard]] [[maybe_unused]] auto createChannel(Channel::Number channelNumber) noexcept -> std::expected<Channel::Pointer, Error>;
 
 private:
-  DriverHandle driverHandle = nullptr;
-  CalibrationHandle calibrationHandle = nullptr;
+  [[nodiscard]] auto reconfigure() -> bool;
 
 private:
-  ChannelConfigurations channelConfigurations = {};
+  Number const m_unitNumber;
+  Channel::ContinuousHandle const m_continuousHandle;
+  Channel::CalibrationHandle const m_calibrationHandle;
+
+private:
+  Configurations m_configurations{};
 };
 
 } // namespace adc

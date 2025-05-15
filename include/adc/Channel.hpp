@@ -17,6 +17,8 @@
 #include <cstdint>
 #include <esp_adc/adc_cali.h>
 #include <esp_adc/adc_continuous.h>
+#include <expected>
+#include <memory>
 
 namespace adc {
 
@@ -26,11 +28,18 @@ public:
 
 public:
   using Value = std::uint16_t;
+  using Number = std::uint8_t;
+  using Pointer = std::unique_ptr<Channel>;
   using Voltage = std::uint16_t;
   using FrameSize = std::uint32_t;
-  using DriverHandle = adc_continuous_handle_t;
-  using ChannelNumber = std::uint8_t;
+  using ContinuousHandle = adc_continuous_handle_t;
   using CalibrationHandle = adc_cali_handle_t;
+
+private:
+  using ContinuousEventData = adc_continuous_evt_data_t;
+
+private:
+  Channel(Number channelNumber, ContinuousHandle continuousHandle, CalibrationHandle calibrationHandle) noexcept;
 
 public:
   [[nodiscard]] [[maybe_unused]] auto getRawValue() const -> Value;
@@ -38,14 +47,9 @@ public:
   [[nodiscard]] [[maybe_unused]] auto getFrameSize() const -> FrameSize;
 
 private:
-  Channel(ChannelNumber channelNumber, DriverHandle &driverHandle, CalibrationHandle &calibrationHandle);
-
-private:
-  ChannelNumber const channelNumber;
-
-private:
-  DriverHandle &driverHandle;
-  CalibrationHandle &calibrationHandle;
+  Number const m_channelNumber;
+  ContinuousHandle const m_continuousHandle;
+  CalibrationHandle const m_calibrationHandle;
 };
 
 } // namespace adc
